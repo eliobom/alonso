@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Buscador ALP</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background: #f4f6fb;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding-top: 60px;
+    }
+
+    h1 {
+        font-size: 34px;
+        color: #ff006e;
+        margin-bottom: 30px;
+        font-weight: bold;
+        letter-spacing: 1px;
+    }
+
+    .search-container {
+        width: 520px;
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    input {
+        flex: 1;
+        padding: 12px 16px;
+        font-size: 16px;
+        border: 1px solid #dcdcdc;
+        border-radius: 24px 0 0 24px;
+        outline: none;
+    }
+
+    button {
+        padding: 12px 20px;
+        font-size: 16px;
+        border: none;
+        background: #ff006e;
+        color: #fff;
+        border-radius: 0 24px 24px 0;
+        cursor: pointer;
+        transition: background 0.3s;
+    }
+
+    button:hover {
+        background: #d1005b;
+    }
+
+    .suggestions {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: #fff;
+        border: 1px solid #ddd;
+        border-top: none;
+        border-radius: 0 0 12px 12px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        z-index: 1000;
+    }
+
+    .suggestion-item {
+        padding: 10px 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        cursor: pointer;
+        font-size: 15px;
+        transition: background 0.2s;
+    }
+
+    .suggestion-item:hover {
+        background: #fff0f6;
+    }
+
+    .suggestion-left {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: #2d3436;
+    }
+
+    .suggestion-icon {
+        font-size: 16px;
+        color: #ff006e;
+    }
+
+    .suggestion-right {
+        font-size: 13px;
+        color: #ff006e;
+        font-weight: bold;
+    }
+
+    /* Chips estilo Google */
+    .chips {
+        width: 520px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 14px;
+    }
+
+    .chip {
+        padding: 8px 12px;
+        font-size: 14px;
+        border-radius: 16px;
+        border: 1px solid #e0e0e0;
+        background: #fff;
+        color: #333;
+        cursor: pointer;
+        transition: background 0.2s, color 0.2s, border-color 0.2s;
+        user-select: none;
+    }
+
+    .chip:hover {
+        background: #f7f7f7;
+        border-color: #d6d6d6;
+    }
+
+    .chip.active {
+        background: #ff006e;
+        color: #fff;
+        border-color: #ff006e;
+    }
+</style>
+</head>
+<body>
+    <h1>Buscador ALP</h1>
+
+    <div class="search-container">
+        <input type="text" id="searchInput" placeholder="Buscar artículos tecnológicos...">
+        <button>Buscar</button>
+        <div id="suggestions" class="suggestions"></div>
+    </div>
+
+    <!-- Chips de sugerencias rápidas -->
+    <div id="chips" class="chips"></div>
+
+<script>
+const suggestionsData = [
+    { text: "Smartphone 5G", category: "Móviles", icon: "📱" },
+    { text: "Laptop ultraligera", category: "Portátiles", icon: "💻" },
+    { text: "Tablet gráfica", category: "Diseño", icon: "✏️" },
+    { text: "Smartwatch deportivo", category: "Wearables", icon: "⌚" },
+    { text: "Auriculares inalámbricos", category: "Audio", icon: "🎧" },
+    { text: "Cámara 4K", category: "Fotografía", icon: "📷" },
+    { text: "Consola de videojuegos", category: "Gaming", icon: "🎮" },
+    { text: "Teclado mecánico", category: "Accesorios", icon: "⌨️" },
+    { text: "Mouse gamer", category: "Accesorios", icon: "🖱️" },
+    { text: "Monitor curvo", category: "Pantallas", icon: "🖥️" },
+    { text: "Proyector portátil", category: "Oficina", icon: "📽️" },
+    { text: "Impresora 3D", category: "Innovación", icon: "🖨️" },
+    { text: "Router WiFi 6", category: "Redes", icon: "📡" },
+    { text: "Disco SSD NVMe", category: "Almacenamiento", icon: "💾" },
+    { text: "Memoria RAM DDR5", category: "Hardware", icon: "🔋" },
+    { text: "Placa madre gaming", category: "Hardware", icon: "🖧" },
+    { text: "Tarjeta gráfica RTX", category: "Hardware", icon: "🎨" },
+    { text: "Procesador Intel i9", category: "Hardware", icon: "⚡" },
+    { text: "Bocina inteligente", category: "Smart Home", icon: "🔊" },
+    { text: "Bombilla inteligente", category: "Smart Home", icon: "💡" },
+    { text: "Dron con cámara", category: "Gadgets", icon: "🚁" },
+    { text: "Gafas VR", category: "Realidad Virtual", icon: "🥽" },
+    { text: "Cargador inalámbrico", category: "Accesorios", icon: "🔌" },
+    { text: "Power Bank", category: "Accesorios", icon: "🔋" },
+    { text: "Microcontrolador Arduino", category: "Maker", icon: "🤖" },
+    { text: "Kit Raspberry Pi", category: "Maker", icon: "🛠️" },
+    { text: "Software de IA", category: "Inteligencia Artificial", icon: "🧠" },
+    { text: "Servidor NAS", category: "Almacenamiento", icon: "🗄️" },
+    { text: "Cámara de seguridad WiFi", category: "Seguridad", icon: "📹" },
+    { text: "Robot aspirador", category: "Smart Home", icon: "🧹" }
+];
+
+const input = document.getElementById("searchInput");
+const suggestionsBox = document.getElementById("suggestions");
+const chipsContainer = document.getElementById("chips");
+
+// Renderizar chips estilo Google a partir de los primeros elementos
+function renderChips() {
+    const items = suggestionsData.slice(0, 8); // Top 8
+    chipsContainer.innerHTML = "";
+    items.forEach(item => {
+        const chip = document.createElement("div");
+        chip.className = "chip";
+        chip.textContent = item.text;
+        chip.onclick = () => {
+            setActiveChip(chip);
+            input.value = item.text;
+            // Disparar el filtrado como si el usuario tecleara
+            input.dispatchEvent(new Event("input"));
+        };
+        chipsContainer.appendChild(chip);
+    });
+}
+
+function setActiveChip(activeEl) {
+    document.querySelectorAll(".chip").forEach(c => c.classList.remove("active"));
+    activeEl.classList.add("active");
+}
+
+// Manejador para el botón Buscar (refresca sugerencias con el valor actual)
+document.querySelector('.search-container button').addEventListener('click', () => {
+    input.dispatchEvent(new Event('input'));
+});
+
+// Inicializar chips al cargar
+renderChips();
+
+input.addEventListener("input", () => {
+    const query = input.value.toLowerCase().trim();
+    suggestionsBox.innerHTML = "";
+
+    if (query === "") {
+        suggestionsBox.style.display = "none";
+        return;
+    }
+
+    // Filtrar resultados: solo los que empiezan con lo escrito
+    const filtered = suggestionsData.filter(item =>
+        item.text.toLowerCase().startsWith(query)
+    );
+
+    if (filtered.length === 0) {
+        suggestionsBox.style.display = "none";
+        return;
+    }
+
+    // Crear lista de sugerencias
+    filtered.forEach(item => {
+        const div = document.createElement("div");
+        div.className = "suggestion-item";
+        div.innerHTML = `
+            <div class="suggestion-left">
+                <span class="suggestion-icon">${item.icon}</span>
+                <span>${item.text}</span>
+            </div>
+            <div class="suggestion-right">${item.category}</div>
+        `;
+        div.onclick = () => {
+            input.value = item.text;
+            suggestionsBox.style.display = "none";
+        };
+        suggestionsBox.appendChild(div);
+    });
+
+    suggestionsBox.style.display = "block";
+});
+</script>
+</body>
+</html>
